@@ -55,6 +55,9 @@ std::string CCerror;
 // Private method:
 UniValue z_getoperationstatus_IMPL(const UniValue&, bool);
 
+#define PLAN_NAME_MAX   8
+#define VALID_PLAN_NAME(x)  (strlen(x) <= PLAN_NAME_MAX)
+
 std::string HelpRequiringPassphrase()
 {
     return pwalletMain && pwalletMain->IsCrypted()
@@ -5283,15 +5286,20 @@ UniValue dicebet(const UniValue& params, bool fHelp)
     fundingtxid = Parseuint256((char *)params[1].get_str().c_str());
     amount = atof(params[2].get_str().c_str()) * COIN;
     odds = atol(params[3].get_str().c_str());
-    if (amount > 0 && odds > 0) {
-        hex = DiceBet(0,name,fundingtxid,amount,odds);
-        if ( hex.size() > 0 )
-        {
-            result.push_back(Pair("result", "success"));
-            result.push_back(Pair("hex", hex));
-        } else ERR_RESULT("couldnt create dice bet transaction. make sure your address has funds");
+
+    if (VALID_PLAN_NAME(name)) {
+        if (amount > 0 && odds > 0) {
+            hex = DiceBet(0,name,fundingtxid,amount,odds);
+            if ( hex.size() > 0 )
+            {
+                result.push_back(Pair("result", "success"));
+                result.push_back(Pair("hex", hex));
+            } else ERR_RESULT("couldnt create dice bet transaction. make sure your address has funds");
+        } else {
+            ERR_RESULT("amount and odds must be positive");
+        }
     } else {
-        ERR_RESULT("amount and odds must be positive");
+        ERR_RESULT(strprintf("Plan name can be at most %d ASCII characters",PLAN_NAME_MAX));
     }
     return(result);
 }

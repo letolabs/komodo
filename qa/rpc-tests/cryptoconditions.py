@@ -428,7 +428,6 @@ class CryptoConditionsTest (BitcoinTestFramework):
         print("Importing privkey")
         rpc.importprivkey(self.privkey)
 
-#       self.run_faucet_tests()
         self.run_rewards_tests()
         self.run_dice_tests()
         self.run_token_tests()
