@@ -3771,6 +3771,9 @@ UniValue z_sendmany(const UniValue& params, bool fHelp)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, unknown key: ")+s);
         }
 
+        UniValue av = find_value(o, "amount");
+        CAmount nAmount = AmountFromValue( av );
+
         string address = find_value(o, "address").get_str();
         bool isZaddr = false;
         CBitcoinAddress taddr(address);
@@ -3785,7 +3788,10 @@ UniValue z_sendmany(const UniValue& params, bool fHelp)
             }
         }
         else if ( ASSETCHAINS_PRIVATE != 0 )
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "cant use transparent addresses in private chain");
+        {
+            if (nAmount > 0)
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "cant use transparent addresses with non-zero amounts in private chain");
+        }
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+address);
@@ -3805,8 +3811,6 @@ UniValue z_sendmany(const UniValue& params, bool fHelp)
             }
         }
 
-        UniValue av = find_value(o, "amount");
-        CAmount nAmount = AmountFromValue( av );
         if (nAmount < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, amount must be positive");
 
