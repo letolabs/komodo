@@ -1573,8 +1573,10 @@ void static BitcoinMiner()
     }
     if ( ASSETCHAINS_SYMBOL[0] == 0 )
         komodo_chosennotary(&notaryid,chainActive.LastTip()->GetHeight(),NOTARY_PUBKEY33,(uint32_t)chainActive.LastTip()->GetBlockTime());
-    if ( notaryid != My_notaryid )
+    if ( notaryid != My_notaryid ) {
         My_notaryid = notaryid;
+        sleep(1); // lessen CPU usage on Notary Nodes
+    }
     std::string solver;
     //if ( notaryid >= 0 || ASSETCHAINS_SYMBOL[0] != 0 )
     solver = "tromp";
