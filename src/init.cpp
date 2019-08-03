@@ -749,6 +749,9 @@ static void ZC_LoadParams(
 {
     struct timeval tv_start, tv_end;
     float elapsed;
+    static bool ishush3 = false;
+
+    ishush3 = strncmp(ASSETCHAINS_SYMBOL, "HUSH3",5) == 0 ? true : false;
 
     boost::filesystem::path pk_path = ZC_GetParamsDir() / "sprout-proving.key";
     boost::filesystem::path vk_path = ZC_GetParamsDir() / "sprout-verifying.key";
@@ -756,27 +759,48 @@ static void ZC_LoadParams(
     boost::filesystem::path sapling_output = ZC_GetParamsDir() / "sapling-output.params";
     boost::filesystem::path sprout_groth16 = ZC_GetParamsDir() / "sprout-groth16.params";
 
-    if (!(
-        boost::filesystem::exists(pk_path) &&
-        boost::filesystem::exists(vk_path) &&
-        boost::filesystem::exists(sapling_spend) &&
-        boost::filesystem::exists(sapling_output) &&
-        boost::filesystem::exists(sprout_groth16)
-    )) {
-        uiInterface.ThreadSafeMessageBox(strprintf(
-            _("Cannot find the Zcash network parameters in the following directory:\n"
-              "%s\n"
-              "Please run 'zcash-fetch-params' or './zcutil/fetch-params.sh' and then restart."),
-                ZC_GetParamsDir()),
-            "", CClientUIInterface::MSG_ERROR);
-        StartShutdown();
-        return;
+    if( ishush3 ) {
+        if (!(
+            boost::filesystem::exists(sapling_spend) &&
+            boost::filesystem::exists(sapling_output) &&
+            boost::filesystem::exists(sprout_groth16)
+        )) {
+            uiInterface.ThreadSafeMessageBox(strprintf(
+                _("Cannot find the Zcash network parameters in the following directory:\n"
+                "%s\n"
+                "Please run 'zcash-fetch-params' or './zcutil/fetch-params.sh' and then restart."),
+                    ZC_GetParamsDir()),
+                "", CClientUIInterface::MSG_ERROR);
+            StartShutdown();
+            return;
+        }
+    } else {
+        if (!(
+            boost::filesystem::exists(pk_path) &&
+            boost::filesystem::exists(vk_path) &&
+            boost::filesystem::exists(sapling_spend) &&
+            boost::filesystem::exists(sapling_output) &&
+            boost::filesystem::exists(sprout_groth16)
+        )) {
+            uiInterface.ThreadSafeMessageBox(strprintf(
+                _("Cannot find the Zcash network parameters in the following directory:\n"
+                "%s\n"
+                "Please run 'zcash-fetch-params' or './zcutil/fetch-params.sh' and then restart."),
+                    ZC_GetParamsDir()),
+                "", CClientUIInterface::MSG_ERROR);
+            StartShutdown();
+            return;
+        }
     }
 
-    LogPrintf("Loading verifying key from %s\n", vk_path.string().c_str());
     gettimeofday(&tv_start, 0);
 
-    pzcashParams = ZCJoinSplit::Prepared(vk_path.string(), pk_path.string());
+    if (hush3) {
+        // HUSH3 does not need sprout params loaded
+    } else {
+        LogPrintf("Loading verifying key from %s\n", vk_path.string().c_str());
+        pzcashParams = ZCJoinSplit::Prepared(vk_path.string(), pk_path.string());
+    }
 
     gettimeofday(&tv_end, 0);
     elapsed = float(tv_end.tv_sec-tv_start.tv_sec) + (tv_end.tv_usec-tv_start.tv_usec)/float(1000000);
